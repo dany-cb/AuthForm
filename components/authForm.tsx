@@ -4,96 +4,69 @@ import { Center, HStack, Heading, VStack } from '@chakra-ui/react'
 import InputField from '../components/inputField'
 import { FC } from 'react'
 
-const submitHandler = (data) => {
-  console.log(data)
-}
-
-const errorHandler = (error) => {
-  console.log(error)
-}
-
-const signInFields = [
-  {
-    id: 'user',
-    label: 'Username/Email',
-    type: 'text',
-    required: true,
-  },
-  {
-    id: 'pwd',
-    label: 'Password',
-    type: 'password',
-    required: true,
-  },
-]
-
-const signUpFields = [
-  {
-    id: 'username',
-    label: 'Username',
-    type: 'text',
-    required: true,
-    pattern: /^(?=.{5,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/,
-  },
-  {
-    id: 'email',
-    label: 'Email',
-    type: 'email',
-    required: true,
-    pattern: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-  },
-  // Nested array for Optional Horizontal-Stacking
-  [
+const FIELDS = {
+  signin: [
+    {
+      id: 'user',
+      label: 'Username/Email',
+      type: 'text',
+      required: true,
+    },
     {
       id: 'pwd',
       label: 'Password',
       type: 'password',
-      pattern: {
-        value: /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/,
-        message:
-          'Minimum eight characters, at least one letter, one number and one special character',
-      },
       required: true,
     },
-    {
-      id: 'confirmPwd',
-      label: 'Confirm',
-      type: 'password',
-      required: false,
-    },
   ],
-]
-
-const signUpDefaultVals = {
-  username: '',
-  email: '',
-  pwd: '',
-  confirmPwd: '',
-}
-
-const signInDefaltVals = {
-  user: '',
-  pwd: '',
+  signup: [
+    {
+      id: 'username',
+      label: 'Username',
+      type: 'text',
+      required: true,
+      pattern: /^(?=.{5,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/,
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      type: 'email',
+      required: true,
+      pattern: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+    },
+    // Nested array for Optional Horizontal-Stacking
+    [
+      {
+        id: 'pwd',
+        label: 'Password',
+        type: 'password',
+        pattern: {
+          value:
+            /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/,
+          message:
+            'Minimum eight characters, at least one letter, one number and one special character',
+        },
+        required: true,
+      },
+      {
+        id: 'confirmPwd',
+        label: 'Confirm',
+        type: 'password',
+        required: false,
+      },
+    ],
+  ],
 }
 
 const AuthForm: FC<{ mode: 'signin' | 'signup' }> = ({ mode }) => {
-  // Pick one of the value based on mode
+  /**
+   * Returns value based on the current mode value
+   * @returns signInVal | signUpVal
+   */
   const picker = (signInVal, signUpVal) => {
     return mode === 'signin' ? signInVal : signUpVal
   }
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    mode: 'onBlur',
-    defaultValues: picker(signInDefaltVals, signUpDefaultVals),
-  })
-
-  const fields = picker(signInFields, signUpFields)
-
-  // Callback function for map that returns InputFields
+  // Callback function when mapping over fields
   const fieldsFactory = (field) => {
     if (Array.isArray(field)) {
       return <HStack key={field[0].label}>{field.map(fieldsFactory)}</HStack>
@@ -107,6 +80,18 @@ const AuthForm: FC<{ mode: 'signin' | 'signup' }> = ({ mode }) => {
       />
     )
   }
+  const submitHandler = (data) => {
+    console.log(data)
+  }
+
+  const fields = picker(FIELDS.signin, FIELDS.signup)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    mode: 'onBlur',
+  })
 
   return (
     <Center height="100vh">
@@ -116,7 +101,7 @@ const AuthForm: FC<{ mode: 'signin' | 'signup' }> = ({ mode }) => {
           px="10"
           width="40%"
           alignItems="start"
-          onSubmit={handleSubmit(submitHandler, errorHandler)}
+          onSubmit={handleSubmit(submitHandler)}
         >
           <Heading as="h2" size="2xl" fontWeight={600}>
             {picker('Sign In', 'Sign Up')}
