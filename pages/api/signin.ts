@@ -1,12 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '../../lib/prisma'
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-import cookie from 'cookie'
+import { jwtTokenGen } from '../../utils/authHelpers'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { user, pwd } = req.body
-  const details = await prisma.user.findFirst({
+  const userInfo = await prisma.user.findFirst({
     where: {
       OR: [
         {
@@ -19,36 +18,26 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     },
     select: {
       id: true,
-      username: true,
+      email: true,
       password: true,
     },
   })
 
-  if ((await details) && (await bcrypt.compare(pwd, details.password))) {
-    const token = jwt.sign(
-      {
-        id: details.id,
-        username: details.username,
-        time: Date.now(),
-      },
-      process.env.JWT_KEY,
-      {
-        expiresIn: '8h',
-      },
-    )
+  if ((await userInfo) && (await bcrypt.compare(pwd, userInfo.password))) {
+    // const crntTime = Date.now()
 
-    res.setHeader(
-      'Set-Cookie',
-      cookie.serialize('AUTH_TOKEN', token, {
-        httpOnly: true,
-        maxAge: 8 * 60 * 60,
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      }),
-    )
+    // const token = createToken({
+    //   id: userInfo.id,
+    //   email: userInfo.email,
+    //   time: crntTime,
+    // })
 
-    res.json('Credentials match!')
+    // setCookie(res, 'AUTH_TOKEN', token)
+
+    // const error = updateLastLogin(crntTime, userInfo.id)
+
+    jwtTokenGen(res, userInfo)
+    res.json('Login Successful')
   } else {
     res.status(401)
     res.json({
