@@ -12,14 +12,21 @@ const fetcher = (url: string, data?: object) => {
     }
     return res.json()
   })
-
   return {
     then(callback: (data: object) => void) {
       fetchData = fetchData.then(callback)
       return this
     },
     catch: (errorCallback: (error) => void) => {
-      fetchData.catch((err) => err.json()).then(errorCallback)
+      fetchData
+        .catch((err) => {
+          try {
+            return err.json()
+          } catch (e) {
+            console.error('Received non-json from API')
+          }
+        })
+        .then(errorCallback)
     },
   }
 }
